@@ -11,12 +11,25 @@ paths:
   /api/products:
     get:
       summary: List products
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: Nombre del producto para filtrar
       responses:
         '200':
           description: Success
+
   /api/orders:
     get:
       summary: List orders
+      parameters:
+        - in: query
+          name: customer
+          schema:
+            type: string
+          description: Nombre del cliente para filtrar órdenes
       responses:
         '200':
           description: Success

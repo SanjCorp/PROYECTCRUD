@@ -1,11 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const ctrl = require('../controllers/productsController');
 
-router.get('/', ctrl.getAll);
-router.get('/:id', ctrl.getById);
-router.post('/', ctrl.create);
-router.put('/:id', ctrl.update);
-router.delete('/:id', ctrl.remove);
+// Aquí tus productos de ejemplo o importación de modelo MongoDB
+let products = [
+  { id: 1, name: 'Filamento PLA', price: 20 },
+  { id: 2, name: 'PLA Negro', price: 22 }
+];
+
+// GET /api/products?name=...
+router.get('/', (req, res) => {
+  const { name } = req.query;
+  let filtered = products;
+  if (name) {
+    filtered = products.filter(p => p.name.toLowerCase().includes(name.toLowerCase()));
+  }
+  res.json(filtered);
+});
 
 module.exports = router;

@@ -21,6 +21,12 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+// ✅ Ruta raíz (evita el 404 en Render)
+app.get("/", (req, res) => {
+  res.send("🚀 Bienvenido a la API PROYECTCRUD - SanjCorp ✅");
+});
+
+// Middleware de manejo de errores
 app.use((err, req, res, next) => {
   console.error(err);
   if (res.headersSent) return next(err);

@@ -8,9 +8,16 @@ servers:
     description: API desplegada en Render
 
 paths:
+  # ===== Productos =====
   /api/products:
     get:
       summary: List products
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: Filtrar productos por nombre
       responses:
         '200':
           description: Success
@@ -30,6 +37,8 @@ paths:
       responses:
         '201':
           description: Product created
+
+  /api/products/{id}:
     delete:
       summary: Delete a product
       parameters:
@@ -43,9 +52,16 @@ paths:
         '200':
           description: Product deleted
 
+  # ===== Órdenes =====
   /api/orders:
     get:
       summary: List orders
+      parameters:
+        - in: query
+          name: customer
+          schema:
+            type: string
+          description: Filtrar órdenes por cliente
       responses:
         '200':
           description: Success
@@ -67,12 +83,17 @@ paths:
       responses:
         '201':
           description: Order created
+
+  /api/orders/{id}:
     delete:
       summary: Delete an order
       parameters:
         - in: path
           name: id
           schema:
-          type: integer
+            type: integer
           required: true
           description: ID de la orden a eliminar
+      responses:
+        '200':
+          description: Order deleted

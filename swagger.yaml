@@ -73,6 +73,6 @@ paths:
         - in: path
           name: id
           schema:
-            type: integer
+          type: integer
           required: true
-          descr
+          description: ID de la orden a eliminar

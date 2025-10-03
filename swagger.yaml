@@ -11,25 +11,68 @@ paths:
   /api/products:
     get:
       summary: List products
-      parameters:
-        - in: query
-          name: name
-          schema:
-            type: string
-          description: Nombre del producto para filtrar
       responses:
         '200':
           description: Success
+    post:
+      summary: Create a product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                price:
+                  type: number
+      responses:
+        '201':
+          description: Product created
+    delete:
+      summary: Delete a product
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: ID del producto a eliminar
+      responses:
+        '200':
+          description: Product deleted
 
   /api/orders:
     get:
       summary: List orders
-      parameters:
-        - in: query
-          name: customer
-          schema:
-            type: string
-          description: Nombre del cliente para filtrar órdenes
       responses:
         '200':
           description: Success
+    post:
+      summary: Create an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customerName:
+                  type: string
+                product:
+                  type: string
+                quantity:
+                  type: integer
+      responses:
+        '201':
+          description: Order created
+    delete:
+      summary: Delete an order
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          descr

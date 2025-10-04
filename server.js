@@ -14,6 +14,7 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
+// Rutas
 const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
 
@@ -21,12 +22,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// ✅ Ruta raíz (evita el 404 en Render)
-app.get("/", (req, res) => {
-  res.send("🚀 Bienvenido a la API PROYECTCRUD - SanjCorp ✅");
-});
-
-// Middleware de manejo de errores
+// Middleware de errores
 app.use((err, req, res, next) => {
   console.error(err);
   if (res.headersSent) return next(err);
@@ -37,7 +33,7 @@ const PORT = process.env.PORT || 3000;
 
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
-    console.log('Connected to MongoDB');
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    console.log('✅ Connected to MongoDB');
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   })
-  .catch(err => console.error('Mongo connection error:', err));
+  .catch(err => console.error('❌ Mongo connection error:', err));

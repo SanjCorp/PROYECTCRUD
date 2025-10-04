@@ -1,82 +1,82 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Product = require('../models/product');
 
-// ✅ GET - Obtener todos los productos
+// GET all
 router.get('/', async (req, res) => {
   try {
     const products = await Product.find();
     res.status(200).json(products);
-  } catch (error) {
-    console.error('Error al obtener productos:', error);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
-// ✅ GET - Obtener un producto por ID
+// GET by id
 router.get('/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) return res.status(400).json({ error: 'ID inválido' });
+
+    const product = await Product.findById(id);
     if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
     res.status(200).json(product);
-  } catch (error) {
-    console.error('Error al obtener producto:', error);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
-// ✅ POST - Crear un nuevo producto
+// POST create
 router.post('/', async (req, res) => {
   try {
-    const { name, price, category } = req.body;
-    if (!name || !price || !category) {
-      return res.status(400).json({ error: 'Todos los campos son requeridos' });
-    }
+    const body = req.body;
+    if (!body || Object.keys(body).length === 0) return res.status(400).json({ error: 'Cuerpo vacío' });
 
-    const newProduct = new Product({ name, price, category });
+    // Puedes agregar validaciones específicas aquí si lo deseas
+    const newProduct = new Product(body);
     await newProduct.save();
     res.status(201).json(newProduct);
-  } catch (error) {
-    console.error('Error al crear producto:', error);
+  } catch (err) {
+    console.error(err);
+    // si es error de validación de mongoose, responde 400
+    if (err.name === 'ValidationError') return res.status(400).json({ error: err.message });
     res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
-// ✅ PUT - Actualizar un producto
+// PUT update (PATCH-like, admite actualizar cualquier campo validado por el esquema)
 router.put('/:id', async (req, res) => {
   try {
-    const { name, price, category } = req.body;
-    if (!name || !price || !category) {
-      return res.status(400).json({ error: 'Todos los campos son requeridos' });
-    }
+    const { id } = req.params;
+    const update = req.body;
 
-    const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id,
-      { name, price, category },
-      { new: true }
-    );
+    if (!mongoose.isValidObjectId(id)) return res.status(400).json({ error: 'ID inválido' });
+    if (!update || Object.keys(update).length === 0) return res.status(400).json({ error: 'Cuerpo vacío' });
 
-    if (!updatedProduct) {
-      return res.status(404).json({ error: 'Producto no encontrado' });
-    }
-
-    res.status(200).json(updatedProduct);
-  } catch (error) {
-    console.error('Error al actualizar producto:', error);
+    const updated = await Product.findByIdAndUpdate(id, update, { new: true, runValidators: true });
+    if (!updated) return res.status(404).json({ error: 'Producto no encontrado' });
+    res.status(200).json(updated);
+  } catch (err) {
+    console.error(err);
+    if (err.name === 'ValidationError') return res.status(400).json({ error: err.message });
     res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
-// ✅ DELETE - Eliminar un producto
+// DELETE
 router.delete('/:id', async (req, res) => {
   try {
-    const deleted = await Product.findByIdAndDelete(req.params.id);
-    if (!deleted) {
-      return res.status(404).json({ error: 'Producto no encontrado' });
-    }
+    const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) return res.status(400).json({ error: 'ID inválido' });
+
+    const deleted = await Product.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).json({ error: 'Producto no encontrado' });
     res.status(200).json({ message: 'Producto eliminado correctamente' });
-  } catch (error) {
-    console.error('Error al eliminar producto:', error);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error del servidor' });
   }
 });

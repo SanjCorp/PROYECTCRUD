@@ -1,82 +1,80 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Order = require('../models/order');
 
-// ✅ GET - Obtener todas las órdenes
+// GET all
 router.get('/', async (req, res) => {
   try {
     const orders = await Order.find();
     res.status(200).json(orders);
-  } catch (error) {
-    console.error('Error al obtener órdenes:', error);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
-// ✅ GET - Obtener una orden por ID
+// GET by id
 router.get('/:id', async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) return res.status(400).json({ error: 'ID inválido' });
+
+    const order = await Order.findById(id);
     if (!order) return res.status(404).json({ error: 'Orden no encontrada' });
     res.status(200).json(order);
-  } catch (error) {
-    console.error('Error al obtener orden:', error);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
-// ✅ POST - Crear nueva orden
+// POST create
 router.post('/', async (req, res) => {
   try {
-    const { productId, quantity, customer } = req.body;
-    if (!productId || !quantity || !customer) {
-      return res.status(400).json({ error: 'Todos los campos son requeridos' });
-    }
+    const body = req.body;
+    if (!body || Object.keys(body).length === 0) return res.status(400).json({ error: 'Cuerpo vacío' });
 
-    const newOrder = new Order({ productId, quantity, customer });
+    const newOrder = new Order(body);
     await newOrder.save();
     res.status(201).json(newOrder);
-  } catch (error) {
-    console.error('Error al crear orden:', error);
+  } catch (err) {
+    console.error(err);
+    if (err.name === 'ValidationError') return res.status(400).json({ error: err.message });
     res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
-// ✅ PUT - Actualizar una orden
+// PUT update
 router.put('/:id', async (req, res) => {
   try {
-    const { productId, quantity, customer } = req.body;
-    if (!productId || !quantity || !customer) {
-      return res.status(400).json({ error: 'Todos los campos son requeridos' });
-    }
+    const { id } = req.params;
+    const update = req.body;
 
-    const updatedOrder = await Order.findByIdAndUpdate(
-      req.params.id,
-      { productId, quantity, customer },
-      { new: true }
-    );
+    if (!mongoose.isValidObjectId(id)) return res.status(400).json({ error: 'ID inválido' });
+    if (!update || Object.keys(update).length === 0) return res.status(400).json({ error: 'Cuerpo vacío' });
 
-    if (!updatedOrder) {
-      return res.status(404).json({ error: 'Orden no encontrada' });
-    }
-
-    res.status(200).json(updatedOrder);
-  } catch (error) {
-    console.error('Error al actualizar orden:', error);
+    const updated = await Order.findByIdAndUpdate(id, update, { new: true, runValidators: true });
+    if (!updated) return res.status(404).json({ error: 'Orden no encontrada' });
+    res.status(200).json(updated);
+  } catch (err) {
+    console.error(err);
+    if (err.name === 'ValidationError') return res.status(400).json({ error: err.message });
     res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
-// ✅ DELETE - Eliminar una orden
+// DELETE
 router.delete('/:id', async (req, res) => {
   try {
-    const deleted = await Order.findByIdAndDelete(req.params.id);
-    if (!deleted) {
-      return res.status(404).json({ error: 'Orden no encontrada' });
-    }
+    const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) return res.status(400).json({ error: 'ID inválido' });
+
+    const deleted = await Order.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).json({ error: 'Orden no encontrada' });
     res.status(200).json({ message: 'Orden eliminada correctamente' });
-  } catch (error) {
-    console.error('Error al eliminar orden:', error);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error del servidor' });
   }
 });

@@ -2,16 +2,19 @@ openapi: 3.0.0
 info:
   title: W03 CRUD API
   version: 1.0.0
+  description: API para gestionar productos y órdenes - SanjCorp
 
 servers:
   - url: https://proyectcrud.onrender.com
     description: API desplegada en Render
+  - url: http://localhost:3000
+    description: API local
 
 paths:
   # ===== Productos =====
   /api/products:
     get:
-      summary: List products
+      summary: List all products
       parameters:
         - in: query
           name: name
@@ -20,7 +23,7 @@ paths:
           description: Filtrar productos por nombre
       responses:
         '200':
-          description: Success
+          description: Lista de productos
     post:
       summary: Create a product
       requestBody:
@@ -29,33 +32,86 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - name
+                - price
+                - category
               properties:
                 name:
                   type: string
                 price:
                   type: number
+                category:
+                  type: string
       responses:
         '201':
-          description: Product created
+          description: Producto creado
 
   /api/products/{id}:
+    get:
+      summary: Get a product by ID
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: ID del producto
+      responses:
+        '200':
+          description: Producto encontrado
+        '404':
+          description: Producto no encontrado
+    put:
+      summary: Update a product
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: ID del producto a actualizar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - price
+                - category
+              properties:
+                name:
+                  type: string
+                price:
+                  type: number
+                category:
+                  type: string
+      responses:
+        '200':
+          description: Producto actualizado
+        '404':
+          description: Producto no encontrado
     delete:
       summary: Delete a product
       parameters:
         - in: path
           name: id
           schema:
-            type: integer
+            type: string
           required: true
           description: ID del producto a eliminar
       responses:
         '200':
-          description: Product deleted
+          description: Producto eliminado
+        '404':
+          description: Producto no encontrado
 
   # ===== Órdenes =====
   /api/orders:
     get:
-      summary: List orders
+      summary: List all orders
       parameters:
         - in: query
           name: customer
@@ -64,7 +120,7 @@ paths:
           description: Filtrar órdenes por cliente
       responses:
         '200':
-          description: Success
+          description: Lista de órdenes
     post:
       summary: Create an order
       requestBody:
@@ -73,27 +129,78 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - customer
+                - productId
+                - quantity
               properties:
-                customerName:
+                customer:
                   type: string
-                product:
+                productId:
                   type: string
                 quantity:
                   type: integer
       responses:
         '201':
-          description: Order created
+          description: Orden creada
 
   /api/orders/{id}:
+    get:
+      summary: Get an order by ID
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: ID de la orden
+      responses:
+        '200':
+          description: Orden encontrada
+        '404':
+          description: Orden no encontrada
+    put:
+      summary: Update an order
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: ID de la orden a actualizar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - customer
+                - productId
+                - quantity
+              properties:
+                customer:
+                  type: string
+                productId:
+                  type: string
+                quantity:
+                  type: integer
+      responses:
+        '200':
+          description: Orden actualizada
+        '404':
+          description: Orden no encontrada
     delete:
       summary: Delete an order
       parameters:
         - in: path
           name: id
           schema:
-            type: integer
+            type: string
           required: true
           description: ID de la orden a eliminar
       responses:
         '200':
-          description: Order deleted
+          description: Orden eliminada
+        '404':
+          description: Orden no encontrada

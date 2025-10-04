@@ -1,39 +1,44 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const morgan = require('morgan');
+const bodyParser = require('body-parser');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const swaggerUi = require('swagger-ui-express');
-const YAML = require('yamljs');
+const fs = require('fs');
+const yaml = require('yaml');
 
-dotenv.config();
 const app = express();
-const swaggerDocument = YAML.load('./swagger.yaml');
-
-app.use(cors());
-app.use(express.json());
-app.use(morgan('dev'));
-
-// Rutas
-const productRoutes = require('./routes/products');
-const orderRoutes = require('./routes/orders');
-
-app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
-// Middleware de errores
-app.use((err, req, res, next) => {
-  console.error(err);
-  if (res.headersSent) return next(err);
-  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
-});
-
 const PORT = process.env.PORT || 3000;
 
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => {
-    console.log('✅ Connected to MongoDB');
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-  })
-  .catch(err => console.error('❌ Mongo connection error:', err));
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+
+// Conexión a MongoDB
+mongoose.connect('mongodb://127.0.0.1:27017/w03crud', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(() => console.log('✅ Conectado a MongoDB'))
+.catch(err => console.error('❌ Error conectando a MongoDB:', err));
+
+// Importar rutas
+const productsRoutes = require('./routes/products');
+const ordersRoutes = require('./routes/orders');
+
+app.use('/products', productsRoutes);
+app.use('/orders', ordersRoutes);
+
+// Swagger
+const swaggerFile = fs.readFileSync('./swagger.yaml', 'utf8');
+const swaggerDocument = yaml.parse(swaggerFile);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// Ruta base
+app.get('/', (req, res) => {
+    res.send('🚀 API CRUD funcionando! Visita /api-docs para ver Swagger');
+});
+
+// Iniciar servidor
+app.listen(PORT, () => {
+    console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+});

@@ -1,30 +1,26 @@
 openapi: 3.0.0
 info:
-  title: CRUD API Project
+  title: API CRUD W03
   version: 1.0.0
-  description: API con operaciones CRUD para Products y Orders
-
+  description: API CRUD de productos y órdenes con Express y MongoDB
 servers:
-  - url: https://proyectcrud.onrender.com
+  - url: http://localhost:3000
 
 paths:
-  /api/products:
+  /products:
     get:
-      summary: Get all products
+      summary: Obtener todos los productos
       responses:
         '200':
           description: Lista de productos
     post:
-      summary: Create a new product
+      summary: Crear un nuevo producto
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - name
-                - price
               properties:
                 name:
                   type: string
@@ -33,133 +29,48 @@ paths:
       responses:
         '201':
           description: Producto creado
-
-  /api/products/{id}:
+  /products/{id}:
     get:
-      summary: Get a product by ID
+      summary: Obtener un producto por ID
       parameters:
-        - in: path
-          name: id
+        - name: id
+          in: path
           required: true
           schema:
             type: string
       responses:
         '200':
           description: Producto encontrado
-        '404':
-          description: Producto no encontrado
-    put:
-      summary: Update a product by ID
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                price:
-                  type: number
-      responses:
-        '200':
-          description: Producto actualizado
-        '404':
-          description: Producto no encontrado
     delete:
-      summary: Delete a product by ID
+      summary: Eliminar un producto por ID
       parameters:
-        - in: path
-          name: id
+        - name: id
+          in: path
           required: true
           schema:
             type: string
       responses:
         '200':
           description: Producto eliminado
-        '404':
-          description: Producto no encontrado
-
-  /api/orders:
+  /orders:
     get:
-      summary: Get all orders
+      summary: Obtener todas las órdenes
       responses:
         '200':
           description: Lista de órdenes
     post:
-      summary: Create a new order
+      summary: Crear una nueva orden
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - productId
-                - quantity
               properties:
                 productId:
                   type: string
                 quantity:
-                  type: integer
+                  type: number
       responses:
         '201':
           description: Orden creada
-
-  /api/orders/{id}:
-    get:
-      summary: Get an order by ID
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Orden encontrada
-        '404':
-          description: Orden no encontrada
-    put:
-      summary: Update an order by ID
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                productId:
-                  type: string
-                quantity:
-                  type: integer
-      responses:
-        '200':
-          description: Orden actualizada
-        '404':
-          description: Orden no encontrada
-    delete:
-      summary: Delete an order by ID
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Orden eliminada
-        '404':
-          description: Orden no encontrada

@@ -1,36 +1,84 @@
 const express = require('express');
 const router = express.Router();
+const Order = require('../models/order');
 
-let orders = [
-  { id: 1, customerName: 'Ricardo Sanjines', product: 'Filamento PLA', quantity: 2 },
-  { id: 2, customerName: 'Juan Pérez', product: 'PLA Negro', quantity: 1 }
-];
-
-// GET /api/orders?customer=...
-router.get('/', (req, res) => {
-  const { customer } = req.query;
-  let filtered = orders;
-  if (customer) {
-    filtered = orders.filter(o => o.customerName.toLowerCase().includes(customer.toLowerCase()));
+// ✅ GET - Obtener todas las órdenes
+router.get('/', async (req, res) => {
+  try {
+    const orders = await Order.find();
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error('Error al obtener órdenes:', error);
+    res.status(500).json({ error: 'Error del servidor' });
   }
-  res.json(filtered);
 });
 
-// POST /api/orders - Crear una orden
-router.post('/', (req, res) => {
-  const { customerName, product, quantity } = req.body;
-  const newOrder = { id: orders.length + 1, customerName, product, quantity };
-  orders.push(newOrder);
-  res.status(201).json({ message: 'Orden creada', order: newOrder });
+// ✅ GET - Obtener una orden por ID
+router.get('/:id', async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ error: 'Orden no encontrada' });
+    res.status(200).json(order);
+  } catch (error) {
+    console.error('Error al obtener orden:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
 });
 
-// DELETE /api/orders/:id - Eliminar una orden
-router.delete('/:id', (req, res) => {
-  const { id } = req.params;
-  const index = orders.findIndex(o => o.id == id);
-  if (index === -1) return res.status(404).json({ message: 'Orden no encontrada' });
-  const deleted = orders.splice(index, 1);
-  res.json({ message: 'Orden eliminada', order: deleted[0] });
+// ✅ POST - Crear nueva orden
+router.post('/', async (req, res) => {
+  try {
+    const { productId, quantity, customer } = req.body;
+    if (!productId || !quantity || !customer) {
+      return res.status(400).json({ error: 'Todos los campos son requeridos' });
+    }
+
+    const newOrder = new Order({ productId, quantity, customer });
+    await newOrder.save();
+    res.status(201).json(newOrder);
+  } catch (error) {
+    console.error('Error al crear orden:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// ✅ PUT - Actualizar una orden
+router.put('/:id', async (req, res) => {
+  try {
+    const { productId, quantity, customer } = req.body;
+    if (!productId || !quantity || !customer) {
+      return res.status(400).json({ error: 'Todos los campos son requeridos' });
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      req.params.id,
+      { productId, quantity, customer },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({ error: 'Orden no encontrada' });
+    }
+
+    res.status(200).json(updatedOrder);
+  } catch (error) {
+    console.error('Error al actualizar orden:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// ✅ DELETE - Eliminar una orden
+router.delete('/:id', async (req, res) => {
+  try {
+    const deleted = await Order.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Orden no encontrada' });
+    }
+    res.status(200).json({ message: 'Orden eliminada correctamente' });
+  } catch (error) {
+    console.error('Error al eliminar orden:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
 });
 
 module.exports = router;

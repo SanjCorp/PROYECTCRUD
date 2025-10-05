@@ -1,46 +1,117 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const morgan = require('morgan');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const swaggerUi = require('swagger-ui-express');
-const YAML = require('yamljs');
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
 
+// Cargar variables de entorno
 dotenv.config();
+
+// Crear la app Express
 const app = express();
-const swaggerDocument = YAML.load('./swagger.yaml');
-
-app.use(cors());
 app.use(express.json());
-app.use(morgan('dev'));
+app.use(cors());
 
-// ✅ Importa rutas correctamente
-const productRoutes = require('./routes/products');
-const orderRoutes = require('./routes/orders');
+// Conectar a MongoDB
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('✅ Conectado a MongoDB'))
+  .catch(err => console.error('❌ Error al conectar con MongoDB:', err));
 
-// ✅ Usa las rutas
-app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes);
-
-// ✅ Swagger
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
-// ✅ Error handler
-app.use((err, req, res, next) => {
-  console.error(err);
-  if (res.headersSent) return next(err);
-  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
+// Esquemas y Modelos
+const productSchema = new mongoose.Schema({
+  name: String,
+  price: Number,
+  stock: Number
 });
 
-// ✅ Conexión a MongoDB y servidor
-const PORT = process.env.PORT || 3000;
+const orderSchema = new mongoose.Schema({
+  productId: String,
+  quantity: Number,
+  total: Number
+});
 
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => {
-    console.log('Connected to MongoDB');
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-  })
-  .catch(err => console.error('Mongo connection error:', err));
+const Product = mongoose.model('Product', productSchema);
+const Order = mongoose.model('Order', orderSchema);
+
+// Rutas API
+// ---------- PRODUCTOS ----------
+app.get('/api/products', async (req, res) => {
+  const products = await Product.find();
+  res.json(products);
+});
+
+app.post('/api/products', async (req, res) => {
+  try {
+    const newProduct = new Product(req.body);
+    await newProduct.save();
+    res.status(201).json({ message: '✅ Producto creado', data: newProduct });
+  } catch (error) {
+    res.status(400).json({ message: '❌ Error al crear producto', error });
+  }
+});
+
+app.put('/api/products/:id', async (req, res) => {
+  try {
+    const updated = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json({ message: '✅ Producto actualizado', data: updated });
+  } catch (error) {
+    res.status(400).json({ message: '❌ Error al actualizar producto', error });
+  }
+});
+
+app.delete('/api/products/:id', async (req, res) => {
+  try {
+    await Product.findByIdAndDelete(req.params.id);
+    res.json({ message: '🗑️ Producto eliminado' });
+  } catch (error) {
+    res.status(400).json({ message: '❌ Error al eliminar producto', error });
+  }
+});
+
+// ---------- ÓRDENES ----------
+app.get('/api/orders', async (req, res) => {
+  const orders = await Order.find();
+  res.json(orders);
+});
+
+app.post('/api/orders', async (req, res) => {
+  try {
+    const newOrder = new Order(req.body);
+    await newOrder.save();
+    res.status(201).json({ message: '✅ Orden creada', data: newOrder });
+  } catch (error) {
+    res.status(400).json({ message: '❌ Error al crear orden', error });
+  }
+});
+
+app.put('/api/orders/:id', async (req, res) => {
+  try {
+    const updated = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json({ message: '✅ Orden actualizada', data: updated });
+  } catch (error) {
+    res.status(400).json({ message: '❌ Error al actualizar orden', error });
+  }
+});
+
+app.delete('/api/orders/:id', async (req, res) => {
+  try {
+    await Order.findByIdAndDelete(req.params.id);
+    res.json({ message: '🗑️ Orden eliminada' });
+  } catch (error) {
+    res.status(400).json({ message: '❌ Error al eliminar orden', error });
+  }
+});
+
+// ---------- SWAGGER ----------
+const swaggerDocument = YAML.load('./swagger.yaml');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// ---------- RUTA RAÍZ ----------
+app.get('/', (req, res) => {
+  res.send('🚀 API funcionando correctamente - Visita /api-docs para ver la documentación.');
+});
+
+// Puerto
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🌐 Servidor corriendo en puerto ${PORT}`));

@@ -1,11 +1,9 @@
 openapi: 3.0.0
 info:
-  title: API CRUD W03
+  title: API CRUD Proyecto
   version: 1.0.0
-  description: API CRUD de productos y órdenes con Express y MongoDB
 servers:
-  - url: http://localhost:3000
-
+  - url: https://proyectcrud.onrender.com
 paths:
   /products:
     get:

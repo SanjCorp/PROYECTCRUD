@@ -13,8 +13,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// Conexión a MongoDB
-mongoose.connect('mongodb://127.0.0.1:27017/w03crud', {
+// 📦 Conexión a MongoDB (usa variable de entorno en Render)
+const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/w03crud';
+mongoose.connect(mongoURI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
@@ -25,8 +26,8 @@ mongoose.connect('mongodb://127.0.0.1:27017/w03crud', {
 const productsRoutes = require('./routes/products');
 const ordersRoutes = require('./routes/orders');
 
-app.use('/products', productsRoutes);
-app.use('/orders', ordersRoutes);
+app.use('/api/products', productsRoutes);
+app.use('/api/orders', ordersRoutes);
 
 // Swagger
 const swaggerFile = fs.readFileSync('./swagger.yaml', 'utf8');
@@ -40,5 +41,5 @@ app.get('/', (req, res) => {
 
 // Iniciar servidor
 app.listen(PORT, () => {
-    console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`✅ Servidor corriendo en el puerto ${PORT}`);
 });

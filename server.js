@@ -13,14 +13,17 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// 📦 Conexión a MongoDB (usa variable de entorno en Render)
-const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/w03crud';
-mongoose.connect(mongoURI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
+// Conexión a MongoDB Atlas (no local)
+const mongoose = require('mongoose');
+require('dotenv').config();
+
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
 })
-.then(() => console.log('✅ Conectado a MongoDB'))
-.catch(err => console.error('❌ Error conectando a MongoDB:', err));
+  .then(() => console.log('✅ Conectado a MongoDB Atlas'))
+  .catch(err => console.error('❌ Error conectando a MongoDB:', err));
+
 
 // Importar rutas
 const productsRoutes = require('./routes/products');

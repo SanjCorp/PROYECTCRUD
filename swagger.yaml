@@ -1,16 +1,17 @@
 openapi: 3.0.0
 info:
-  title: API CRUD Proyecto
+  title: Proyecto CRUD API
   version: 1.0.0
+  description: API con CRUD completo para productos y órdenes
 servers:
   - url: https://proyectcrud.onrender.com
 paths:
-  /products:
+  /api/products:
     get:
-      summary: Obtener todos los productos
+      summary: Listar productos
       responses:
         '200':
-          description: Lista de productos
+          description: Lista de productos obtenida correctamente
     post:
       summary: Crear un nuevo producto
       requestBody:
@@ -24,23 +25,39 @@ paths:
                   type: string
                 price:
                   type: number
+                stock:
+                  type: number
       responses:
         '201':
-          description: Producto creado
-  /products/{id}:
-    get:
-      summary: Obtener un producto por ID
+          description: Producto creado correctamente
+
+  /api/products/{id}:
+    put:
+      summary: Actualizar producto por ID
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                price:
+                  type: number
+                stock:
+                  type: number
       responses:
         '200':
-          description: Producto encontrado
+          description: Producto actualizado
     delete:
-      summary: Eliminar un producto por ID
+      summary: Eliminar producto por ID
       parameters:
         - name: id
           in: path
@@ -50,12 +67,13 @@ paths:
       responses:
         '200':
           description: Producto eliminado
-  /orders:
+
+  /api/orders:
     get:
-      summary: Obtener todas las órdenes
+      summary: Listar órdenes
       responses:
         '200':
-          description: Lista de órdenes
+          description: Lista de órdenes obtenida correctamente
     post:
       summary: Crear una nueva orden
       requestBody:
@@ -69,6 +87,45 @@ paths:
                   type: string
                 quantity:
                   type: number
+                total:
+                  type: number
       responses:
         '201':
-          description: Orden creada
+          description: Orden creada correctamente
+
+  /api/orders/{id}:
+    put:
+      summary: Actualizar orden por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId:
+                  type: string
+                quantity:
+                  type: number
+                total:
+                  type: number
+      responses:
+        '200':
+          description: Orden actualizada correctamente
+    delete:
+      summary: Eliminar orden por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Orden eliminada correctamente

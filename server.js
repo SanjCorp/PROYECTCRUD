@@ -5,36 +5,40 @@ import { router as authRouter } from "./routes/auth.js";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 
-// Cargar variables de entorno lo antes posible
+// Importar modelos y rutas
+import { Product } from "./models/product.js";
+import { Order } from "./models/order.js";
+import productRoutes from "./routes/products.js";
+import orderRoutes from "./routes/orders.js";
+import { authenticateJWT } from "./middleware/auth.js";
+
 dotenv.config();
 
-// Debug: verificar que MONGO_URI se esté leyendo correctamente
-console.log("MONGO_URI:", process.env.MONGO_URI);
-
 const app = express();
-
-// 👇 Middleware para procesar JSON y formularios
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 👇 Swagger
-// Asegúrate de tener el archivo openapi.yaml en la raíz del proyecto
+// Swagger
 const swaggerDocument = YAML.load("./openapi.yaml");
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Conexión a MongoDB
 mongoose
-  .connect(process.env.MONGODB_URI, {   // <- cambiar aquí
+  .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
   .then(() => console.log("✅ Conectado a MongoDB"))
   .catch(err => console.error("❌ Error al conectar MongoDB:", err));
 
-// Rutas
+// Rutas abiertas
 app.use("/api/auth", authRouter);
 
-// Ruta principal de prueba
+// Rutas protegidas con JWT
+app.use("/api/products", authenticateJWT, productRoutes(Product));
+app.use("/api/orders", authenticateJWT, orderRoutes(Order));
+
+// Ruta principal
 app.get("/", (req, res) => {
   res.send("Servidor funcionando correctamente 🚀");
 });

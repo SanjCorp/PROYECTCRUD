@@ -37,6 +37,16 @@ app.get('/', (req, res) => {
   res.send('🚀 API funcionando - Visita /api-docs');
 });
 
+// Rutas
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/auth', authRoutes);
+
+// Ruta raíz
+app.get('/', (req, res) => {
+  res.send('🚀 API funcionando - Visita /api-docs');
+});
+
 // Servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🌐 Servidor corriendo en puerto ${PORT}`));

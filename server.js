@@ -19,13 +19,12 @@ app.use(cors());
 const swaggerDocument = YAML.load('./openapi.yaml');
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Verifica que la variable de entorno exista
+// Conexión MongoDB remoto
 if (!process.env.MONGODB_URI) {
   console.error('❌ La variable de entorno MONGODB_URI no está definida');
   process.exit(1);
 }
 
-// Conexión MongoDB remoto
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -33,7 +32,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 .then(() => console.log('✅ Conectado a MongoDB remoto'))
 .catch(err => console.error('❌ Error de conexión a MongoDB remoto:', err));
 
-// MODELOS (evita OverwriteModelError)
+// MODELOS (evitan OverwriteModelError)
 const Product = mongoose.models.Product || mongoose.model('Product', new mongoose.Schema({
   name: String,
   price: Number,
@@ -46,10 +45,15 @@ const Order = mongoose.models.Order || mongoose.model('Order', new mongoose.Sche
   total: Number
 }));
 
-// Rutas (pasamos los modelos)
+const User = mongoose.models.User || mongoose.model('User', new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true }
+}))  // puedes agregar más campos según tu modelo
+
+// Rutas (pasando los modelos)
 app.use('/api/products', productRoutes(Product));
 app.use('/api/orders', orderRoutes(Order));
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes(User));
 
 // Ruta raíz
 app.get('/', (req, res) => {

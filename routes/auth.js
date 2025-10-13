@@ -1,50 +1,60 @@
+// routes/auth.js
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import mongoose from 'mongoose';
 
-const router = express.Router();
+export default (User) => {
+  const router = express.Router();
 
-// Modelo Usuario
-const User = mongoose.models.User || mongoose.model('User', new mongoose.Schema({
-  name: { type: String },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true }
-}));
+  // Registro de usuario
+  router.post('/register', async (req, res) => {
+    try {
+      const { name, email, password } = req.body;
 
-// Registro de usuario
-router.post('/register', async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: '❌ Usuario ya existe' });
+      // Validar si el usuario ya existe
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: '❌ Usuario ya registrado' });
+      }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ name, email, password: hashedPassword });
-    await newUser.save();
+      // Hashear la contraseña
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-    res.status(201).json({ message: '✅ Usuario registrado', data: { email, name } });
-  } catch (error) {
-    res.status(500).json({ message: '❌ Error al registrar usuario', error });
-  }
-});
+      const newUser = new User({ name, email, password: hashedPassword });
+      await newUser.save();
 
-// Login
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: '❌ Usuario no encontrado' });
+      res.status(201).json({ message: '✅ Usuario registrado', data: newUser });
+    } catch (error) {
+      res.status(500).json({ message: '❌ Error en registro', error });
+    }
+  });
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: '❌ Contraseña incorrecta' });
+  // Login de usuario
+  router.post('/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
 
-    const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.json({ message: '✅ Login exitoso', token });
-  } catch (error) {
-    res.status(500).json({ message: '❌ Error al iniciar sesión', error });
-  }
-});
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(400).json({ message: '❌ Usuario no encontrado' });
+      }
 
-export default router;
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return res.status(400).json({ message: '❌ Contraseña incorrecta' });
+      }
 
+      const token = jwt.sign(
+        { id: user._id, email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: '1d' }
+      );
+
+      res.status(200).json({ message: '✅ Login exitoso', token });
+    } catch (error) {
+      res.status(500).json({ message: '❌ Error en login', error });
+    }
+  });
+
+  return router;
+};

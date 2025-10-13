@@ -48,7 +48,15 @@ const Order = mongoose.models.Order || mongoose.model('Order', new mongoose.Sche
   subtotal: Number,
   tax: Number,
   total: Number
+  
 }));
+// Modelo User
+const User = mongoose.models.User || mongoose.model('User', new mongoose.Schema({
+  name: String,
+  email: { type: String, unique: true },
+  password: String
+}));
+
 
 // Rutas
 app.use('/api/products', productRoutes(Product));

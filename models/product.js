@@ -1,12 +1,11 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema({
-  name: String,
-  price: Number,
-  stock: Number
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
+  category: { type: String, required: true },
+  sku: { type: String, required: true },
+  stock: { type: Number, required: true },
 });
 
-// Evita OverwriteModelError
-const Product = mongoose.models.Product || mongoose.model('Product', productSchema);
-
-export default Product;
+export const Product = mongoose.model("Product", productSchema);

@@ -1,27 +1,24 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true, lowercase: true },
-  name: { type: String },
-  password: { type: String }, // hashed
-  provider: { type: String, default: 'local' }, // 'local' or 'google'
-  providerId: { type: String } // id from Google
+  name: { type: String, required: false },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  provider: { type: String, default: 'local' } // local o google
 }, { timestamps: true });
 
-// hash password before save (only for local)
+// Hash password antes de guardar
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (err) { next(err); }
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
 });
 
-// method to check password
-userSchema.methods.comparePassword = function(candidate) {
-  return bcrypt.compare(candidate, this.password);
+// Comparar contraseña
+userSchema.methods.comparePassword = async function(password) {
+  return bcrypt.compare(password, this.password);
 };
 
-module.exports = mongoose.model('User', userSchema);
+const User = mongoose.model('User', userSchema);
+export default User;

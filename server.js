@@ -7,6 +7,7 @@ import swaggerUi from 'swagger-ui-express';
 
 import productRoutes from './routes/products.js';
 import orderRoutes from './routes/orders.js';
+import authRoutes from './routes/auth.js';
 
 dotenv.config();
 
@@ -14,24 +15,31 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// ✅ Swagger (solo una vez)
+// Swagger
 const swaggerDocument = YAML.load('./openapi.yaml');
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// ✅ Conectar con MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('✅ Conectado a MongoDB'))
-  .catch(err => console.error('❌ Error de conexión a MongoDB:', err));
+// Conexión MongoDB
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log('✅ Conectado a MongoDB'))
+.catch(err => console.error('❌ Error de conexión a MongoDB:', err));
 
-// ✅ Rutas
+// Rutas
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/auth', authRoutes);
 
-// ✅ Servidor
+// Ruta raíz
+app.get('/', (req, res) => {
+  res.send('🚀 API funcionando - Visita /api-docs');
+});
+
+// Servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🌐 Servidor corriendo en puerto ${PORT}`));
-
-
 
 // Esquemas y Modelos
 const productSchema = new mongoose.Schema({

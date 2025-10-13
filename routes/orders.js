@@ -1,105 +1,52 @@
-import express from "express";
-import mongoose from "mongoose";
-import cors from "cors";
+import express from 'express';
+import Order from '../models/order.js';
+import Product from '../models/product.js';
+import { authenticateJWT } from '../middleware/auth.js';
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+const router = express.Router();
 
-// Conexión a MongoDB
-const uri = "mongodb+srv://<TU_USUARIO>:<TU_PASSWORD>@<TU_CLUSTER>/crudDB?retryWrites=true&w=majority";
-mongoose.connect(uri)
-  .then(() => console.log("✅ Conectado a MongoDB"))
-  .catch(err => console.error("❌ Error al conectar a MongoDB:", err));
-
-// ----------------------
-// ESQUEMAS Y MODELOS
-// ----------------------
-const productSchema = new mongoose.Schema({
-  name: String,
-  price: Number,
-});
-
-const orderSchema = new mongoose.Schema({
-  customerName: String,
-  product: String,
-  quantity: Number,
-  totalPrice: Number,
-});
-
-const Product = mongoose.model("Product", productSchema);
-const Order = mongoose.model("Order", orderSchema);
-
-// ----------------------
-// RUTAS DE PRODUCTS
-// ----------------------
-app.get("/api/products", async (req, res) => {
-  const products = await Product.find();
-  res.json(products);
-});
-
-app.post("/api/products", async (req, res) => {
-  try {
-    const { name, price } = req.body;
-    const newProduct = new Product({ name, price });
-    await newProduct.save();
-    res.status(201).json(newProduct);
-  } catch (error) {
-    res.status(400).json({ message: "Error al crear producto", error });
-  }
-});
-
-app.put("/api/products/:id", async (req, res) => {
-  try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!product) return res.status(404).json({ message: "Producto no encontrado" });
-    res.json(product);
-  } catch (error) {
-    res.status(400).json({ message: "Error al actualizar producto", error });
-  }
-});
-
-app.delete("/api/products/:id", async (req, res) => {
-  await Product.findByIdAndDelete(req.params.id);
-  res.json({ message: "Producto eliminado" });
-});
-
-// ----------------------
-// RUTAS DE ORDERS
-// ----------------------
-app.get("/api/orders", async (req, res) => {
-  const orders = await Order.find();
+router.get('/', authenticateJWT, async (req, res) => {
+  const orders = await Order.find().populate('items.product');
   res.json(orders);
 });
 
-app.post("/api/orders", async (req, res) => {
+router.post('/', authenticateJWT, async (req, res) => {
   try {
-    const { customerName, product, quantity, totalPrice } = req.body;
-    const newOrder = new Order({ customerName, product, quantity, totalPrice });
-    await newOrder.save();
-    res.status(201).json(newOrder);
-  } catch (error) {
-    res.status(400).json({ message: "Error al crear orden", error });
+    const { orderNumber, customerName, items } = req.body;
+    let subtotal = 0;
+
+    for (const it of items) {
+      const product = await Product.findById(it.product);
+      if (!product) return res.status(400).json({ error: 'Producto no encontrado' });
+      if (product.stock < it.quantity) return res.status(400).json({ error: `Stock insuficiente para ${product.name}` });
+      subtotal += product.price * it.quantity;
+    }
+
+    const tax = +(subtotal * 0.13).toFixed(2);
+    const total = +(subtotal + tax).toFixed(2);
+
+    const order = new Order({ orderNumber, customerName, items, subtotal, tax, total });
+    await order.save();
+    res.status(201).json(order);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 
-app.put("/api/orders/:id", async (req, res) => {
+router.put('/:id', authenticateJWT, async (req, res) => {
   try {
     const order = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!order) return res.status(404).json({ message: "Orden no encontrada" });
+    if (!order) return res.status(404).json({ error: 'Orden no encontrada' });
     res.json(order);
-  } catch (error) {
-    res.status(400).json({ message: "Error al actualizar orden", error });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 
-app.delete("/api/orders/:id", async (req, res) => {
-  await Order.findByIdAndDelete(req.params.id);
-  res.json({ message: "Orden eliminada" });
+router.delete('/:id', authenticateJWT, async (req, res) => {
+  const order = await Order.findByIdAndDelete(req.params.id);
+  if (!order) return res.status(404).json({ error: 'Orden no encontrada' });
+  res.json({ message: 'Orden eliminada' });
 });
 
-// ----------------------
-// INICIO DEL SERVIDOR
-// ----------------------
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🌐 Servidor corriendo en puerto ${PORT}`));
+export default router;

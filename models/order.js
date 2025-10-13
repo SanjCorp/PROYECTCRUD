@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const orderSchema = new mongoose.Schema({
   orderNumber: { type: String, required: true, unique: true },
@@ -6,14 +6,13 @@ const orderSchema = new mongoose.Schema({
   items: [
     {
       product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-      quantity: { type: Number, required: true }
+      quantity: { type: Number, required: true, min: 1 }
     }
   ],
   subtotal: { type: Number, required: true },
   tax: { type: Number, required: true },
-  total: { type: Number, required: true },
-  status: { type: String, enum: ['pending','processing','shipped','delivered','cancelled'], default: 'pending' },
-  createdAt: { type: Date, default: Date.now }
-});
+  total: { type: Number, required: true }
+}, { timestamps: true });
 
-module.exports = mongoose.model('Order', orderSchema);
+const Order = mongoose.model('Order', orderSchema);
+export default Order;

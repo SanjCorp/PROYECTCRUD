@@ -1,37 +1,35 @@
 import express from "express";
 import mongoose from "mongoose";
-import cors from "cors";
 import dotenv from "dotenv";
+import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
+import authRoutes from "./routes/auth.js"; // ✅ SOLO ESTA LÍNEA
+// si tienes más rutas, agrégalas abajo
+// import productRoutes from "./routes/products.js";
 
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-// Middlewares
+// Middleware
 app.use(cors());
 app.use(express.json());
-
-// Conexión a MongoDB
-mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/sanjcrud", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log("MongoDB conectado"))
-.catch(err => console.log("Error MongoDB:", err));
-
-// Rutas
-import authRoutes from "./routes/auth.js";
-import productsRoutes from "./routes/products.js";
-import ordersRoutes from "./routes/orders.js";
-import { router as authRoutes } from "./routes/auth.js";
-
-
-app.use("/api/auth", authRoutes);
-app.use("/api/products", productsRoutes);
-app.use("/api/orders", ordersRoutes);
 
 // Swagger
 const swaggerDocument = YAML.load("./openapi.yaml");
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// Rutas
+app.use("/api/auth", authRoutes);
+// app.use("/api/products", productRoutes);
+
+// Base de datos
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB conectado"))
+  .catch((err) => console.error("❌ Error al conectar a MongoDB:", err));
+
+// Inicio del servidor
+app.listen(PORT, () => console.log(`🚀 Servidor corriendo en puerto ${PORT}`));

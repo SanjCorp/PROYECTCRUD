@@ -1,52 +1,43 @@
 import express from 'express';
 import Order from '../models/order.js';
-import Product from '../models/product.js';
-import { authenticateJWT } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/', authenticateJWT, async (req, res) => {
-  const orders = await Order.find().populate('items.product');
+// Obtener todas las órdenes
+router.get('/', async (req, res) => {
+  const orders = await Order.find();
   res.json(orders);
 });
 
-router.post('/', authenticateJWT, async (req, res) => {
+// Crear orden
+router.post('/', async (req, res) => {
   try {
-    const { orderNumber, customerName, items } = req.body;
-    let subtotal = 0;
-
-    for (const it of items) {
-      const product = await Product.findById(it.product);
-      if (!product) return res.status(400).json({ error: 'Producto no encontrado' });
-      if (product.stock < it.quantity) return res.status(400).json({ error: `Stock insuficiente para ${product.name}` });
-      subtotal += product.price * it.quantity;
-    }
-
-    const tax = +(subtotal * 0.13).toFixed(2);
-    const total = +(subtotal + tax).toFixed(2);
-
-    const order = new Order({ orderNumber, customerName, items, subtotal, tax, total });
-    await order.save();
-    res.status(201).json(order);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+    const newOrder = new Order(req.body);
+    await newOrder.save();
+    res.status(201).json({ message: '✅ Orden creada', data: newOrder });
+  } catch (error) {
+    res.status(400).json({ message: '❌ Error al crear orden', error });
   }
 });
 
-router.put('/:id', authenticateJWT, async (req, res) => {
+// Actualizar orden
+router.put('/:id', async (req, res) => {
   try {
-    const order = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!order) return res.status(404).json({ error: 'Orden no encontrada' });
-    res.json(order);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+    const updated = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json({ message: '✅ Orden actualizada', data: updated });
+  } catch (error) {
+    res.status(400).json({ message: '❌ Error al actualizar orden', error });
   }
 });
 
-router.delete('/:id', authenticateJWT, async (req, res) => {
-  const order = await Order.findByIdAndDelete(req.params.id);
-  if (!order) return res.status(404).json({ error: 'Orden no encontrada' });
-  res.json({ message: 'Orden eliminada' });
+// Eliminar orden
+router.delete('/:id', async (req, res) => {
+  try {
+    await Order.findByIdAndDelete(req.params.id);
+    res.json({ message: '🗑️ Orden eliminada' });
+  } catch (error) {
+    res.status(400).json({ message: '❌ Error al eliminar orden', error });
+  }
 });
 
 export default router;

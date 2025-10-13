@@ -24,7 +24,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Conexión a MongoDB
 mongoose
-  .connect(process.env.MONGO_URI, {
+  .connect(process.env.MONGODB_URI, {   // <- cambiar aquí
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })

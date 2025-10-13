@@ -1,73 +1,39 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import YAML from 'yamljs';
-import swaggerUi from 'swagger-ui-express';
-
-import productRoutes from './routes/products.js';
-import orderRoutes from './routes/orders.js';
-import authRoutes from './routes/auth.js';
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import dotenv from "dotenv";
+import swaggerUi from "swagger-ui-express";
+import YAML from "yamljs";
 
 dotenv.config();
 
 const app = express();
-app.use(express.json());
+
+// Middlewares
 app.use(cors());
+app.use(express.json());
 
-// Swagger
-const swaggerDocument = YAML.load('./openapi.yaml');
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
-// Conexión MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
+// Conexión a MongoDB
+mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/sanjcrud", {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
 })
-.then(() => console.log('✅ Conectado a MongoDB Atlas'))
-.catch(err => console.error('❌ Error de conexión a MongoDB:', err));
-
-// MODELOS
-const Product = mongoose.models.Product || mongoose.model('Product', new mongoose.Schema({
-  name: { type: String, required: true },
-  price: { type: Number, required: true },
-  category: { type: String, required: true },
-  sku: { type: String, required: true, unique: true },
-  stock: { type: Number, required: true }
-}));
-
-const Order = mongoose.models.Order || mongoose.model('Order', new mongoose.Schema({
-  orderNumber: { type: String, required: true, unique: true },
-  customerName: { type: String, required: true },
-  items: [
-    {
-      product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-      quantity: { type: Number, required: true }
-    }
-  ],
-  subtotal: Number,
-  tax: Number,
-  total: Number
-  
-}));
-// Modelo User
-const User = mongoose.models.User || mongoose.model('User', new mongoose.Schema({
-  name: String,
-  email: { type: String, unique: true },
-  password: String
-}));
-
+.then(() => console.log("MongoDB conectado"))
+.catch(err => console.log("Error MongoDB:", err));
 
 // Rutas
-app.use('/api/products', productRoutes(Product));
-app.use('/api/orders', orderRoutes(Order));
-app.use('/api/auth', authRoutes);
+import authRoutes from "./routes/auth.js";
+import productsRoutes from "./routes/products.js";
+import ordersRoutes from "./routes/orders.js";
 
-// Ruta raíz
-app.get('/', (req, res) => {
-  res.send('🚀 API funcionando - Visita /api-docs para ver la documentación');
-});
+app.use("/api/auth", authRoutes);
+app.use("/api/products", productsRoutes);
+app.use("/api/orders", ordersRoutes);
 
-// Servidor
+// Swagger
+const swaggerDocument = YAML.load("./openapi.yaml");
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// Puerto
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🌐 Servidor corriendo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));

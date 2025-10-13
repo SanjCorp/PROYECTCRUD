@@ -1,49 +1,45 @@
 import express from "express";
+import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { User } from "../models/user.js";
 
 export const router = express.Router();
 
-// Registro
 router.post("/register", async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    console.log("📩 Datos recibidos en /register:", req.body);
 
-    // Revisar si ya existe usuario o email
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-    if (existingUser)
-      return res.status(400).json({ message: "Usuario o email ya existe" });
+    const { name, email, password } = req.body;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Verificación de datos vacíos
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "Todos los campos son obligatorios" });
+    }
 
-    const newUser = new User({ username, email, password: hashedPassword });
-    await newUser.save();
-
-    res.status(201).json({ message: "Usuario registrado" });
-  } catch (error) {
-    res.status(500).json({ message: "❌ Error al registrar usuario", error });
-  }
-});
-
-// Login
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "Usuario no encontrado" });
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid)
-      return res.status(400).json({ message: "Contraseña incorrecta" });
-
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || "secret", {
-      expiresIn: "1d",
+    // Verificar si ya existe usuario con ese email o nombre
+    const existingUser = await User.findOne({
+      $or: [{ name: name }, { email: email }]
     });
 
-    res.status(200).json({ token });
-  } catch (error) {
-    res.status(500).json({ message: "❌ Error al hacer login", error });
+    if (existingUser) {
+      return res.status(400).json({ message: "Usuario o email ya existe" });
+    }
+
+    // Hashear contraseña
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = new User({
+      name,
+      email,
+      password: hashedPassword,
+    });
+
+    await user.save();
+
+    res.status(201).json({ message: "✅ Usuario registrado correctamente" });
+
+  } catch (err) {
+    console.error("Error al registrar usuario:", err);
+    res.status(500).json({ message: "❌ Error al registrar usuario", error: err.message });
   }
 });

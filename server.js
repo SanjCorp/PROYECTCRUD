@@ -1,32 +1,27 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import cors from "cors";
-import swaggerUi from "swagger-ui-express";
-import YAML from "yamljs";
-import { router as authRoutes } from "./routes/auth.js"; // export named 'router' en auth.js
+import { router as authRouter } from "./routes/auth.js";
 
 dotenv.config();
-
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
+// 👇 Esto es vital para que req.body funcione
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Swagger
-const swaggerDocument = YAML.load("./openapi.yaml");
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// Conexión a MongoDB
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ Conectado a MongoDB"))
+  .catch(err => console.error("❌ Error al conectar MongoDB:", err));
 
 // Rutas
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRouter);
 
-// Base de datos
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => console.log("✅ MongoDB conectado"))
-  .catch((err) => console.error("❌ Error al conectar a MongoDB:", err));
+app.get("/", (req, res) => {
+  res.send("Servidor funcionando correctamente 🚀");
+});
 
-// Inicio del servidor
-app.listen(PORT, () => console.log(`🚀 Servidor corriendo en puerto ${PORT}`));
+// Puerto
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));

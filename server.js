@@ -2,6 +2,8 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { router as authRouter } from "./routes/auth.js";
+import swaggerUi from "swagger-ui-express";
+import YAML from "yamljs";
 
 // Cargar variables de entorno lo antes posible
 dotenv.config();
@@ -14,6 +16,11 @@ const app = express();
 // 👇 Middleware para procesar JSON y formularios
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// 👇 Swagger
+// Asegúrate de tener el archivo openapi.yaml en la raíz del proyecto
+const swaggerDocument = YAML.load("./openapi.yaml");
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Conexión a MongoDB
 mongoose

@@ -20,24 +20,28 @@ const swaggerDocument = YAML.load('./openapi.yaml');
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Conexión MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
+const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/miDB';
+
+mongoose.connect(mongoURI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => console.log('✅ Conectado a MongoDB'))
+.then(() => {
+  console.log(`✅ Conectado a MongoDB: ${mongoURI.includes('localhost') ? 'LOCAL' : 'REMOTO'}`);
+})
 .catch(err => console.error('❌ Error de conexión a MongoDB:', err));
 
 // MODELOS (evitan OverwriteModelError)
 const Product = mongoose.models.Product || mongoose.model('Product', new mongoose.Schema({
-  name: String,
-  price: Number,
-  stock: Number
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
+  stock: { type: Number, required: true }
 }));
 
 const Order = mongoose.models.Order || mongoose.model('Order', new mongoose.Schema({
-  productId: String,
-  quantity: Number,
-  total: Number
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+  quantity: { type: Number, required: true },
+  total: { type: Number, required: true }
 }));
 
 // Rutas

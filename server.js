@@ -22,10 +22,10 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 // Verifica que la variable de entorno exista
 if (!process.env.MONGODB_URI) {
   console.error('❌ La variable de entorno MONGODB_URI no está definida');
-  process.exit(1); // Detiene la app si no hay URI
+  process.exit(1);
 }
 
-// Conexión MongoDB remota
+// Conexión MongoDB remoto
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -46,7 +46,7 @@ const Order = mongoose.models.Order || mongoose.model('Order', new mongoose.Sche
   total: Number
 }));
 
-// Rutas
+// Rutas (pasamos los modelos)
 app.use('/api/products', productRoutes(Product));
 app.use('/api/orders', orderRoutes(Order));
 app.use('/api/auth', authRoutes);

@@ -3,7 +3,6 @@ import express from 'express';
 export default (Order) => {
   const router = express.Router();
 
-  // Obtener todas las órdenes
   router.get('/', async (req, res) => {
     try {
       const orders = await Order.find();
@@ -13,7 +12,6 @@ export default (Order) => {
     }
   });
 
-  // Crear una orden
   router.post('/', async (req, res) => {
     try {
       const newOrder = new Order(req.body);
@@ -24,7 +22,6 @@ export default (Order) => {
     }
   });
 
-  // Actualizar una orden
   router.put('/:id', async (req, res) => {
     try {
       const updated = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -34,7 +31,6 @@ export default (Order) => {
     }
   });
 
-  // Eliminar una orden
   router.delete('/:id', async (req, res) => {
     try {
       await Order.findByIdAndDelete(req.params.id);

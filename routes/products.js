@@ -3,7 +3,6 @@ import express from 'express';
 export default (Product) => {
   const router = express.Router();
 
-  // Obtener todos los productos
   router.get('/', async (req, res) => {
     try {
       const products = await Product.find();
@@ -13,7 +12,6 @@ export default (Product) => {
     }
   });
 
-  // Crear un producto
   router.post('/', async (req, res) => {
     try {
       const newProduct = new Product(req.body);
@@ -24,7 +22,6 @@ export default (Product) => {
     }
   });
 
-  // Actualizar un producto
   router.put('/:id', async (req, res) => {
     try {
       const updated = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -34,7 +31,6 @@ export default (Product) => {
     }
   });
 
-  // Eliminar un producto
   router.delete('/:id', async (req, res) => {
     try {
       await Product.findByIdAndDelete(req.params.id);

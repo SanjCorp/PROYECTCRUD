@@ -1,5 +1,4 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -9,7 +8,7 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true, // Solo email será único
+    unique: true // email será único
   },
   password: {
     type: String,
@@ -17,15 +16,5 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// Antes de guardar, hasheamos la contraseña
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 10);
-  next();
-});
-
-userSchema.methods.comparePassword = async function(password) {
-  return bcrypt.compare(password, this.password);
-};
-
-export default mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
+export default User;

@@ -4,9 +4,8 @@ import dotenv from "dotenv";
 import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
-import authRoutes from "./routes/auth.js"; // ✅ SOLO ESTA LÍNEA
-// si tienes más rutas, agrégalas abajo
-// import productRoutes from "./routes/products.js";
+import authRoutes from "./routes/auth.js"; // rutas de autenticación
+// import productRoutes from "./routes/products.js"; // si agregas productos
 
 dotenv.config();
 
@@ -25,9 +24,12 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use("/api/auth", authRoutes);
 // app.use("/api/products", productRoutes);
 
-// Base de datos
+// Conexión a MongoDB
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("✅ MongoDB conectado"))
   .catch((err) => console.error("❌ Error al conectar a MongoDB:", err));
 

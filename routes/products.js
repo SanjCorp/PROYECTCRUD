@@ -1,3 +1,4 @@
+const { authenticateJWT } = require('../middleware/auth'); // 🟢 agregado
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/product');
@@ -26,7 +27,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // ✅ POST - Crear un nuevo producto
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWT, async (req, res) => { // 🟢 protegido con JWT
   try {
     const { name, price, category } = req.body;
     if (!name || !price || !category) {
@@ -43,7 +44,7 @@ router.post('/', async (req, res) => {
 });
 
 // ✅ PUT - Actualizar un producto
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateJWT, async (req, res) => { // 🟢 protegido con JWT
   try {
     const { name, price, category } = req.body;
     if (!name || !price || !category) {
@@ -68,7 +69,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // ✅ DELETE - Eliminar un producto
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateJWT, async (req, res) => { // 🟢 protegido con JWT
   try {
     const deleted = await Product.findByIdAndDelete(req.params.id);
     if (!deleted) {

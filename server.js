@@ -1,22 +1,36 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import cors from 'cors';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
-import YAML from 'yamljs';
+import swaggerDocument from './swagger.js';
+import cors from 'cors';
 
-// Cargar variables de entorno
+import productRoutes from './routes/products.js';
+import orderRoutes from './routes/orders.js';
+import authRoutes from './routes/auth.js';
+
 dotenv.config();
-
-// Crear la app Express
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Conectar a MongoDB
-mongoose.connect(process.env.MONGODB_URI)
+// Rutas API
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/auth', authRoutes);
+
+// Swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// MongoDB
+mongoose
+  .connect(process.env.MONGO_URI)
   .then(() => console.log('✅ Conectado a MongoDB'))
-  .catch(err => console.error('❌ Error al conectar con MongoDB:', err));
+  .catch((err) => console.error('Error al conectar MongoDB', err));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🌐 Servidor corriendo en puerto ${PORT}`));
+
 
 // Esquemas y Modelos
 const productSchema = new mongoose.Schema({
@@ -112,6 +126,3 @@ app.get('/', (req, res) => {
   res.send('🚀 API funcionando correctamente - Visita /api-docs para ver la documentación.');
 });
 
-// Puerto
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🌐 Servidor corriendo en puerto ${PORT}`));

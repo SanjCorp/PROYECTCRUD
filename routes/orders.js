@@ -1,84 +1,105 @@
-const express = require('express');
-const router = express.Router();
-const Order = require('../models/order');
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
 
-// ✅ GET - Obtener todas las órdenes
-router.get('/', async (req, res) => {
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// Conexión a MongoDB
+const uri = "mongodb+srv://<TU_USUARIO>:<TU_PASSWORD>@<TU_CLUSTER>/crudDB?retryWrites=true&w=majority";
+mongoose.connect(uri)
+  .then(() => console.log("✅ Conectado a MongoDB"))
+  .catch(err => console.error("❌ Error al conectar a MongoDB:", err));
+
+// ----------------------
+// ESQUEMAS Y MODELOS
+// ----------------------
+const productSchema = new mongoose.Schema({
+  name: String,
+  price: Number,
+});
+
+const orderSchema = new mongoose.Schema({
+  customerName: String,
+  product: String,
+  quantity: Number,
+  totalPrice: Number,
+});
+
+const Product = mongoose.model("Product", productSchema);
+const Order = mongoose.model("Order", orderSchema);
+
+// ----------------------
+// RUTAS DE PRODUCTS
+// ----------------------
+app.get("/api/products", async (req, res) => {
+  const products = await Product.find();
+  res.json(products);
+});
+
+app.post("/api/products", async (req, res) => {
   try {
-    const orders = await Order.find();
-    res.status(200).json(orders);
+    const { name, price } = req.body;
+    const newProduct = new Product({ name, price });
+    await newProduct.save();
+    res.status(201).json(newProduct);
   } catch (error) {
-    console.error('Error al obtener órdenes:', error);
-    res.status(500).json({ error: 'Error del servidor' });
+    res.status(400).json({ message: "Error al crear producto", error });
   }
 });
 
-// ✅ GET - Obtener una orden por ID
-router.get('/:id', async (req, res) => {
+app.put("/api/products/:id", async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ error: 'Orden no encontrada' });
-    res.status(200).json(order);
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!product) return res.status(404).json({ message: "Producto no encontrado" });
+    res.json(product);
   } catch (error) {
-    console.error('Error al obtener orden:', error);
-    res.status(500).json({ error: 'Error del servidor' });
+    res.status(400).json({ message: "Error al actualizar producto", error });
   }
 });
 
-// ✅ POST - Crear nueva orden
-router.post('/', async (req, res) => {
-  try {
-    const { productId, quantity, customer } = req.body;
-    if (!productId || !quantity || !customer) {
-      return res.status(400).json({ error: 'Todos los campos son requeridos' });
-    }
+app.delete("/api/products/:id", async (req, res) => {
+  await Product.findByIdAndDelete(req.params.id);
+  res.json({ message: "Producto eliminado" });
+});
 
-    const newOrder = new Order({ productId, quantity, customer });
+// ----------------------
+// RUTAS DE ORDERS
+// ----------------------
+app.get("/api/orders", async (req, res) => {
+  const orders = await Order.find();
+  res.json(orders);
+});
+
+app.post("/api/orders", async (req, res) => {
+  try {
+    const { customerName, product, quantity, totalPrice } = req.body;
+    const newOrder = new Order({ customerName, product, quantity, totalPrice });
     await newOrder.save();
     res.status(201).json(newOrder);
   } catch (error) {
-    console.error('Error al crear orden:', error);
-    res.status(500).json({ error: 'Error del servidor' });
+    res.status(400).json({ message: "Error al crear orden", error });
   }
 });
 
-// ✅ PUT - Actualizar una orden
-router.put('/:id', async (req, res) => {
+app.put("/api/orders/:id", async (req, res) => {
   try {
-    const { productId, quantity, customer } = req.body;
-    if (!productId || !quantity || !customer) {
-      return res.status(400).json({ error: 'Todos los campos son requeridos' });
-    }
-
-    const updatedOrder = await Order.findByIdAndUpdate(
-      req.params.id,
-      { productId, quantity, customer },
-      { new: true }
-    );
-
-    if (!updatedOrder) {
-      return res.status(404).json({ error: 'Orden no encontrada' });
-    }
-
-    res.status(200).json(updatedOrder);
+    const order = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!order) return res.status(404).json({ message: "Orden no encontrada" });
+    res.json(order);
   } catch (error) {
-    console.error('Error al actualizar orden:', error);
-    res.status(500).json({ error: 'Error del servidor' });
+    res.status(400).json({ message: "Error al actualizar orden", error });
   }
 });
 
-// ✅ DELETE - Eliminar una orden
-router.delete('/:id', async (req, res) => {
-  try {
-    const deleted = await Order.findByIdAndDelete(req.params.id);
-    if (!deleted) {
-      return res.status(404).json({ error: 'Orden no encontrada' });
-    }
-    res.status(200).json({ message: 'Orden eliminada correctamente' });
-  } catch (error) {
-    console.error('Error al eliminar orden:', error);
-    res.status(500).json({ error: 'Error del servidor' });
-  }
+app.delete("/api/orders/:id", async (req, res) => {
+  await Order.findByIdAndDelete(req.params.id);
+  res.json({ message: "Orden eliminada" });
 });
 
-module.exports = router;
+// ----------------------
+// INICIO DEL SERVIDOR
+// ----------------------
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🌐 Servidor corriendo en puerto ${PORT}`));

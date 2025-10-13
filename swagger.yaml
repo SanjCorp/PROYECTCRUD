@@ -1,39 +1,130 @@
 openapi: 3.0.0
 info:
   title: Proyecto CRUD API
-  version: 1.0.0
-  description: API con CRUD completo para productos y órdenes
+  version: 1.1.0
+  description: >
+    API con autenticación JWT, validación y CRUD completo para productos y órdenes.
+    Incluye endpoints de autenticación (registro y login) y rutas protegidas.
+
 servers:
   - url: https://proyectcrud.onrender.com
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Product:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+        category:
+          type: string
+
+    Order:
+      type: object
+      properties:
+        productId:
+          type: string
+        quantity:
+          type: number
+        customer:
+          type: string
+
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+
+security:
+  - bearerAuth: []
+
 paths:
+  /api/auth/register:
+    post:
+      summary: Registrar un nuevo usuario
+      tags:
+        - Autenticación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: Usuario registrado correctamente
+        '400':
+          description: Datos inválidos o usuario ya existente
+
+  /api/auth/login:
+    post:
+      summary: Iniciar sesión y obtener token JWT
+      tags:
+        - Autenticación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login exitoso, retorna token JWT
+        '401':
+          description: Credenciales inválidas
+
   /api/products:
     get:
       summary: Listar productos
+      tags:
+        - Productos
       responses:
         '200':
           description: Lista de productos obtenida correctamente
     post:
       summary: Crear un nuevo producto
+      security:
+        - bearerAuth: []
+      tags:
+        - Productos
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                price:
-                  type: number
-                stock:
-                  type: number
+              $ref: '#/components/schemas/Product'
       responses:
         '201':
           description: Producto creado correctamente
+        '400':
+          description: Datos inválidos
+        '401':
+          description: No autorizado (se requiere token)
 
   /api/products/{id}:
     put:
       summary: Actualizar producto por ID
+      security:
+        - bearerAuth: []
+      tags:
+        - Productos
       parameters:
         - name: id
           in: path
@@ -45,19 +136,22 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                price:
-                  type: number
-                stock:
-                  type: number
+              $ref: '#/components/schemas/Product'
       responses:
         '200':
           description: Producto actualizado
+        '400':
+          description: Datos inválidos
+        '401':
+          description: No autorizado
+        '404':
+          description: Producto no encontrado
     delete:
       summary: Eliminar producto por ID
+      security:
+        - bearerAuth: []
+      tags:
+        - Productos
       parameters:
         - name: id
           in: path
@@ -66,36 +160,47 @@ paths:
             type: string
       responses:
         '200':
-          description: Producto eliminado
+          description: Producto eliminado correctamente
+        '401':
+          description: No autorizado
+        '404':
+          description: Producto no encontrado
 
   /api/orders:
     get:
       summary: Listar órdenes
+      tags:
+        - Órdenes
       responses:
         '200':
           description: Lista de órdenes obtenida correctamente
     post:
       summary: Crear una nueva orden
+      security:
+        - bearerAuth: []
+      tags:
+        - Órdenes
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                productId:
-                  type: string
-                quantity:
-                  type: number
-                total:
-                  type: number
+              $ref: '#/components/schemas/Order'
       responses:
         '201':
           description: Orden creada correctamente
+        '400':
+          description: Datos inválidos
+        '401':
+          description: No autorizado
 
   /api/orders/{id}:
     put:
       summary: Actualizar orden por ID
+      security:
+        - bearerAuth: []
+      tags:
+        - Órdenes
       parameters:
         - name: id
           in: path
@@ -107,25 +212,3 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                productId:
-                  type: string
-                quantity:
-                  type: number
-                total:
-                  type: number
-      responses:
-        '200':
-          description: Orden actualizada correctamente
-    delete:
-      summary: Eliminar orden por ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Orden eliminada correctamente

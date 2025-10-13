@@ -19,24 +19,34 @@ app.use(cors());
 const swaggerDocument = YAML.load('./openapi.yaml');
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Conexión MongoDB remoto
+// Conexión MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => console.log('✅ Conectado a MongoDB remoto'))
-.catch(err => console.error('❌ Error de conexión a MongoDB remoto:', err));
+.then(() => console.log('✅ Conectado a MongoDB Atlas'))
+.catch(err => console.error('❌ Error de conexión a MongoDB:', err));
 
-// MODELOS (previene OverwriteModelError)
+// MODELOS
 const Product = mongoose.models.Product || mongoose.model('Product', new mongoose.Schema({
-  name: String,
-  price: Number,
-  stock: Number
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
+  category: { type: String, required: true },
+  sku: { type: String, required: true, unique: true },
+  stock: { type: Number, required: true }
 }));
 
 const Order = mongoose.models.Order || mongoose.model('Order', new mongoose.Schema({
-  productId: String,
-  quantity: Number,
+  orderNumber: { type: String, required: true, unique: true },
+  customerName: { type: String, required: true },
+  items: [
+    {
+      product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+      quantity: { type: Number, required: true }
+    }
+  ],
+  subtotal: Number,
+  tax: Number,
   total: Number
 }));
 
@@ -47,7 +57,7 @@ app.use('/api/auth', authRoutes);
 
 // Ruta raíz
 app.get('/', (req, res) => {
-  res.send('🚀 API funcionando - Visita /api-docs');
+  res.send('🚀 API funcionando - Visita /api-docs para ver la documentación');
 });
 
 // Servidor

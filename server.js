@@ -19,29 +19,31 @@ app.use(cors());
 const swaggerDocument = YAML.load('./openapi.yaml');
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Conexión MongoDB
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/miDB';
+// Verifica que la variable de entorno exista
+if (!process.env.MONGODB_URI) {
+  console.error('❌ La variable de entorno MONGODB_URI no está definida');
+  process.exit(1); // Detiene la app si no hay URI
+}
 
-mongoose.connect(mongoURI, {
+// Conexión MongoDB remota
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => {
-  console.log(`✅ Conectado a MongoDB: ${mongoURI.includes('localhost') ? 'LOCAL' : 'REMOTO'}`);
-})
-.catch(err => console.error('❌ Error de conexión a MongoDB:', err));
+.then(() => console.log('✅ Conectado a MongoDB remoto'))
+.catch(err => console.error('❌ Error de conexión a MongoDB remoto:', err));
 
-// MODELOS (evitan OverwriteModelError)
+// MODELOS (evita OverwriteModelError)
 const Product = mongoose.models.Product || mongoose.model('Product', new mongoose.Schema({
-  name: { type: String, required: true },
-  price: { type: Number, required: true },
-  stock: { type: Number, required: true }
+  name: String,
+  price: Number,
+  stock: Number
 }));
 
 const Order = mongoose.models.Order || mongoose.model('Order', new mongoose.Schema({
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-  quantity: { type: Number, required: true },
-  total: { type: Number, required: true }
+  productId: String,
+  quantity: Number,
+  total: Number
 }));
 
 // Rutas

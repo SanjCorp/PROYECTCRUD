@@ -25,6 +25,8 @@ mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/sanjcrud", 
 import authRoutes from "./routes/auth.js";
 import productsRoutes from "./routes/products.js";
 import ordersRoutes from "./routes/orders.js";
+import { router as authRoutes } from "./routes/auth.js";
+
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productsRoutes);
@@ -33,7 +35,3 @@ app.use("/api/orders", ordersRoutes);
 // Swagger
 const swaggerDocument = YAML.load("./openapi.yaml");
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
-// Puerto
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));

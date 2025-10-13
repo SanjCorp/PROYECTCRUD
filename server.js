@@ -27,9 +27,22 @@ mongoose.connect(process.env.MONGODB_URI, {
 .then(() => console.log('✅ Conectado a MongoDB'))
 .catch(err => console.error('❌ Error de conexión a MongoDB:', err));
 
+// MODELOS (evitan OverwriteModelError)
+const Product = mongoose.models.Product || mongoose.model('Product', new mongoose.Schema({
+  name: String,
+  price: Number,
+  stock: Number
+}));
+
+const Order = mongoose.models.Order || mongoose.model('Order', new mongoose.Schema({
+  productId: String,
+  quantity: Number,
+  total: Number
+}));
+
 // Rutas
-app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes);
+app.use('/api/products', productRoutes(Product));
+app.use('/api/orders', orderRoutes(Order));
 app.use('/api/auth', authRoutes);
 
 // Ruta raíz
